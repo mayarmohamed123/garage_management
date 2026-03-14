@@ -1,5 +1,16 @@
 import React from 'react';
 import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  AreaChart,
+  Area
+} from 'recharts';
+import { 
   Users, 
   Car, 
   Wrench, 
@@ -10,7 +21,8 @@ import {
   CheckCircle2,
   Plus,
   ClipboardList,
-  CreditCard
+  CreditCard,
+  BarChart3
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useGetDashboardStatsQuery } from '../../services/dashboardService';
@@ -137,6 +149,63 @@ const Dashboard = () => {
                 )}
              </div>
           </div>
+
+          {(isAdminOrManager || isAccountant) && (
+            <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
+                <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-xl font-bold text-slate-900 flex items-center">
+                        <BarChart3 size={24} className="mr-3 text-purple-600" /> Revenue Analytics
+                    </h2>
+                    <div className="flex space-x-2">
+                        <span className="px-3 py-1 bg-slate-50 text-[10px] font-bold text-slate-500 rounded-lg border border-slate-100">Last 6 Months</span>
+                    </div>
+                </div>
+                <div className="h-80 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={[
+                            { month: 'Jan', amount: 4500 },
+                            { month: 'Feb', amount: 5200 },
+                            { month: 'Mar', amount: 4800 },
+                            { month: 'Apr', amount: 6100 },
+                            { month: 'May', amount: 5900 },
+                            { month: 'Jun', amount: parseFloat(stats.monthlyRevenue || 0) },
+                        ]}>
+                            <defs>
+                                <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.1}/>
+                                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                                </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis 
+                                dataKey="month" 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }} 
+                                dy={10}
+                            />
+                            <YAxis 
+                                axisLine={false} 
+                                tickLine={false} 
+                                tick={{ fontSize: 10, fontWeight: 700, fill: '#64748b' }}
+                            />
+                            <Tooltip 
+                                contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '16px', color: '#fff' }}
+                                itemStyle={{ color: '#8b5cf6', fontWeight: 800 }}
+                            />
+                            <Area 
+                                type="monotone" 
+                                dataKey="amount" 
+                                stroke="#8b5cf6" 
+                                strokeWidth={4}
+                                fillOpacity={1} 
+                                fill="url(#colorRevenue)" 
+                            />
+                        </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">

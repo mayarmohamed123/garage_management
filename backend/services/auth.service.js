@@ -22,6 +22,8 @@ class AuthService {
             password: hashedPassword
         });
 
+        console.log(`[Auth] User registered: ${user.email} (${user.role})`);
+
         return {
             id: user.id,
             firstName: user.firstName,
@@ -40,8 +42,11 @@ class AuthService {
 
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
+            console.warn(`[Auth] Failed login attempt for email: ${email}`);
             throw new Error('Invalid credentials');
         }
+
+        console.log(`[Auth] User logged in: ${user.email} (${user.role})`);
 
         return {
             id: user.id,

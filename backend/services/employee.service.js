@@ -3,11 +3,35 @@ const db = require('../models/index');
 const bcrypt = require('bcryptjs');
 
 class EmployeeService {
-    async getAllEmployees() {
-        return await db.users.findAll({
-            where: { role: { [db.Sequelize.Op.ne]: 'Admin' } },
-            attributes: { exclude: ['password'] }
+    async getAllEmployees(query = {}) {
+        const { page = 1, limit = 10, search = '' } = query;
+        const offset = (page - 1) * limit;
+
+        const { Op } = require('sequelize');
+        const where = { role: { [Op.ne]: 'Admin' } };
+
+        if (search) {
+            where[Op.or] = [
+                { firstName: { [Op.like]: `%${search}%` } },
+                { lastName: { [Op.like]: `%${search}%` } },
+                { email: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        const { count, rows } = await db.users.findAndCountAll({
+            where,
+            attributes: { exclude: ['password'] },
+            limit: parseInt(limit),
+            offset: parseInt(offset),
+            order: [['createdAt', 'DESC']]
         });
+
+        return {
+            totalItems: count,
+            employees: rows,
+            totalPages: Math.ceil(count / limit),
+            currentPage: parseInt(page)
+        };
     }
 
     async createEmployee(employeeData) {

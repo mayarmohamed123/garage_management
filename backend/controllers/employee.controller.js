@@ -4,7 +4,7 @@ const asyncHandler = require('../utils/asyncHandler');
 const { createEmployeeSchema, updateEmployeeSchema } = require('../validators/employee.validator');
 
 const getEmployees = asyncHandler(async (req, res) => {
-    const result = await employeeService.getAllEmployees();
+    const result = await employeeService.getAllEmployees(req.query);
     apiResponse(res, 200, "Employees retrieved successfully", result);
 });
 

@@ -12,21 +12,40 @@ class ServiceOrderService {
     }
 
     async getAllOrders(query) {
-        const { status, technicianId, vehicleId } = query;
+        const { status, technicianId, vehicleId, page = 1, limit = 10, search = '' } = query;
+        const offset = (page - 1) * limit;
+
+        const { Op } = require('sequelize');
         const where = {};
         if (status) where.status = status;
         if (technicianId) where.technicianId = technicianId;
         if (vehicleId) where.vehicleId = vehicleId;
 
-        return await db.serviceOrders.findAll({
+        if (search) {
+            where[Op.or] = [
+                { orderNumber: { [Op.like]: `%${search}%` } },
+                { description: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        const { count, rows } = await db.serviceOrders.findAndCountAll({
             where,
             include: [
                 { model: db.vehicles, as: 'vehicle', include: [{ model: db.customers, as: 'customer' }] },
                 { model: db.users, as: 'technician', attributes: ['firstName', 'lastName'] },
                 { model: db.products, as: 'products' }
             ],
+            limit: parseInt(limit),
+            offset: parseInt(offset),
             order: [['createdAt', 'DESC']]
         });
+
+        return {
+            totalItems: count,
+            serviceOrders: rows,
+            totalPages: Math.ceil(count / limit),
+            currentPage: parseInt(page)
+        };
     }
 
     async getOrderById(id) {

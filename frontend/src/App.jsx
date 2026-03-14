@@ -1,9 +1,12 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 import CustomersPage from './pages/customers/CustomersPage';
-import VehiclesPage from './pages/customers/VehiclesPage';
+import CustomerDetails from './pages/customers/CustomerDetails';
+import VehiclesPage from './pages/vehicles/VehiclesPage';
+import VehicleDetails from './pages/vehicles/VehicleDetails';
 import InventoryPage from './pages/inventory/InventoryPage';
 import ServiceOrdersPage from './pages/service-orders/ServiceOrdersPage';
 import CreateServiceOrder from './pages/service-orders/CreateServiceOrder';
@@ -20,11 +23,14 @@ function App() {
     <Router>
       <Routes>
         <Route path="/login" element={!token ? <Login /> : <Navigate to="/" />} />
+        <Route path="/register" element={!token ? <Register /> : <Navigate to="/" />} />
         
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/customers" element={<CustomersPage />} />
+          <Route path="/customers/:id" element={<CustomerDetails />} />
           <Route path="/vehicles" element={<VehiclesPage />} />
+          <Route path="/vehicles/:id" element={<VehicleDetails />} />
           <Route path="/products" element={<InventoryPage />} />
           <Route path="/service-orders" element={<ServiceOrdersPage />} />
           <Route path="/service-orders/create" element={<CreateServiceOrder />} />
