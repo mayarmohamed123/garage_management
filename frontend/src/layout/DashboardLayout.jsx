@@ -11,8 +11,10 @@ import {
   UserCircle, 
   LogOut,
   Menu,
-  X
+  X,
+  Languages
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { logout } from '../features/auth/authSlice';
 
 const DashboardLayout = ({ children }) => {
@@ -21,15 +23,20 @@ const DashboardLayout = ({ children }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
+  const { t, i18n } = useTranslation();
+
+  const toggleLanguage = () => {
+    i18n.changeLanguage(i18n.language === 'en' ? 'ar' : 'en');
+  };
 
   const navigation = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'Technician', 'Accountant'] },
-    { name: 'Customers', href: '/customers', icon: Users, roles: ['Admin', 'Manager'] },
-    { name: 'Vehicles', href: '/vehicles', icon: Car, roles: ['Admin', 'Manager'] },
-    { name: 'Service Orders', href: '/service-orders', icon: Wrench, roles: ['Admin', 'Manager', 'Technician'] },
-    { name: 'Inventory', href: '/products', icon: Package, roles: ['Admin', 'Manager'] },
-    { name: 'Invoices', href: '/invoices', icon: FileText, roles: ['Admin', 'Manager', 'Accountant'] },
-    { name: 'Employees', href: '/employees', icon: UserCircle, roles: ['Admin'] },
+    { name: t('common.dashboard'), href: '/', icon: LayoutDashboard, roles: ['Admin', 'Manager', 'Technician', 'Accountant'] },
+    { name: t('common.customers'), href: '/customers', icon: Users, roles: ['Admin', 'Manager'] },
+    { name: t('common.vehicles'), href: '/vehicles', icon: Car, roles: ['Admin', 'Manager'] },
+    { name: t('common.serviceOrders'), href: '/service-orders', icon: Wrench, roles: ['Admin', 'Manager', 'Technician'] },
+    { name: t('common.inventory'), href: '/products', icon: Package, roles: ['Admin', 'Manager'] },
+    { name: t('common.invoices'), href: '/invoices', icon: FileText, roles: ['Admin', 'Manager', 'Accountant'] },
+    { name: t('common.employees'), href: '/employees', icon: UserCircle, roles: ['Admin'] },
   ];
 
   const filteredNavigation = navigation.filter(item => item.roles.includes(user?.role));
@@ -64,7 +71,7 @@ const DashboardLayout = ({ children }) => {
                 }`}
               >
                 <item.icon size={20} className={isActive ? 'text-blue-500' : ''} />
-                {isSidebarOpen && <span className="ml-3 font-medium text-sm">{item.name}</span>}
+                {isSidebarOpen && <span className={`${i18n.language === 'ar' ? 'mr-3' : 'ml-3'} font-medium text-sm`}>{item.name}</span>}
               </Link>
             );
           })}
@@ -76,7 +83,7 @@ const DashboardLayout = ({ children }) => {
             className="flex items-center w-full p-3 text-slate-400 hover:bg-red-500/10 hover:text-red-400 rounded-xl transition-all duration-200"
           >
             <LogOut size={20} />
-            {isSidebarOpen && <span className="ml-3 font-medium text-sm">Logout</span>}
+            {isSidebarOpen && <span className={`${i18n.language === 'ar' ? 'mr-3' : 'ml-3'} font-medium text-sm`}>{t('common.logout')}</span>}
           </button>
         </div>
       </aside>
@@ -88,8 +95,16 @@ const DashboardLayout = ({ children }) => {
           <h1 className="text-lg font-bold text-slate-800">
              {navigation.find(n => n.href === location.pathname)?.name || 'Management System'}
           </h1>
-          <div className="flex items-center space-x-4">
-             <div className="text-right">
+          <div className={`flex items-center ${i18n.language === 'ar' ? 'space-x-reverse space-x-4' : 'space-x-4'}`}>
+             <button 
+               onClick={toggleLanguage}
+               className="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all flex items-center gap-2"
+               title={i18n.language === 'en' ? 'Switch to Arabic' : 'تغيير للإنجليزية'}
+             >
+                <Languages size={20} />
+                <span className="text-sm font-bold uppercase">{i18n.language === 'en' ? 'AR' : 'EN'}</span>
+             </button>
+             <div className={i18n.language === 'ar' ? 'text-left' : 'text-right'}>
                <p className="text-sm font-semibold text-slate-900 leading-none">{user?.firstName} {user?.lastName}</p>
                <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">{user?.role}</p>
              </div>

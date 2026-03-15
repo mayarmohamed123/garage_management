@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useCreateCustomerMutation, useUpdateCustomerMutation } from '../../services/customerService';
 
 const CustomerForm = ({ customer, onSuccess, onCancel }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -41,7 +43,7 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
       }
       onSuccess();
     } catch (err) {
-      setError(err.data?.message || 'Something went wrong');
+      setError(err.data?.message || t('common.error') || 'Something went wrong');
     }
   };
 
@@ -51,7 +53,7 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
       
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">First Name</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-1">{t('customers.firstName')}</label>
           <input
             type="text"
             required
@@ -61,7 +63,7 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-slate-700 mb-1">Last Name</label>
+          <label className="block text-sm font-semibold text-slate-700 mb-1">{t('customers.lastName')}</label>
           <input
             type="text"
             required
@@ -73,7 +75,7 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-1">Email Address</label>
+        <label className="block text-sm font-semibold text-slate-700 mb-1">{t('customers.email')}</label>
         <input
           type="email"
           className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none"
@@ -83,7 +85,7 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-1">Phone Number</label>
+        <label className="block text-sm font-semibold text-slate-700 mb-1">{t('customers.phone')}</label>
         <input
           type="text"
           required
@@ -94,7 +96,7 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
       </div>
 
       <div>
-        <label className="block text-sm font-semibold text-slate-700 mb-1">Address</label>
+        <label className="block text-sm font-semibold text-slate-700 mb-1">{t('customers.address')}</label>
         <textarea
           rows="3"
           className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all outline-none"
@@ -109,14 +111,14 @@ const CustomerForm = ({ customer, onSuccess, onCancel }) => {
           onClick={onCancel}
           className="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-50 transition-all"
         >
-          Cancel
+          {t('common.cancel')}
         </button>
         <button
           type="submit"
           disabled={isCreating || isUpdating}
           className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-sm disabled:opacity-50"
         >
-          {isCreating || isUpdating ? 'Saving...' : customer ? 'Update' : 'Add Customer'}
+          {isCreating || isUpdating ? t('customers.saving') : customer ? t('common.save') : t('common.add')}
         </button>
       </div>
     </form>

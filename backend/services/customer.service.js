@@ -22,9 +22,11 @@ class CustomerService {
 
         const { count, rows } = await customerRepository.findAndCountAll({
             where,
+            include: [{ model: vehicleRepository.model, as: 'vehicles' }],
             limit: parseInt(limit),
             offset: parseInt(offset),
-            order: [['createdAt', 'DESC']]
+            order: [['createdAt', 'DESC']],
+            distinct: true
         });
 
         return {

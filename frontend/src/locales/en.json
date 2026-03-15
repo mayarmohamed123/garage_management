@@ -1,0 +1,43 @@
+{
+  "common": {
+    "dashboard": "Dashboard",
+    "customers": "Customers",
+    "vehicles": "Vehicles",
+    "serviceOrders": "Service Orders",
+    "inventory": "Inventory",
+    "invoices": "Invoices",
+    "employees": "Employees",
+    "logout": "Logout",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "search": "Search",
+    "next": "Next",
+    "previous": "Previous",
+    "actions": "Actions"
+  },
+  "customers": {
+    "title": "Customers",
+    "description": "Manage your customer database and records.",
+    "addCustomer": "Add Customer",
+    "editCustomer": "Edit Customer",
+    "placeholder": "Search by name or phone...",
+    "name": "Name",
+    "contact": "Contact",
+    "vehiclesCount": "{{count}} Vehicles",
+    "joinDate": "Join Date",
+    "noEmail": "No email",
+    "loading": "Loading customers...",
+    "error": "Failed to load customers.",
+    "empty": "No customers found matching your criteria.",
+    "deleteConfirm": "Are you sure you want to delete this customer?",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email Address",
+    "phone": "Phone Number",
+    "address": "Address",
+    "saving": "Saving..."
+  }
+}

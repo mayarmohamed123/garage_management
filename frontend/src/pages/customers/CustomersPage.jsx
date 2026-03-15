@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useGetCustomersQuery, useDeleteCustomerMutation } from '../../services/customerService';
 import { Table, TableRow, TableCell } from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
@@ -9,6 +10,7 @@ import SearchInput from '../../components/ui/SearchInput';
 import { LoadingState, ErrorState, EmptyState } from '../../components/ui/States';
 
 const CustomersPage = () => {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,7 +32,7 @@ const CustomersPage = () => {
 
   const handleDelete = async (id) => {
     setError('');
-    if (window.confirm('Are you sure you want to delete this customer?')) {
+    if (window.confirm(t('customers.deleteConfirm'))) {
         try {
             await deleteCustomer(id).unwrap();
         } catch (err) {
@@ -42,9 +44,9 @@ const CustomersPage = () => {
   return (
     <div className="space-y-6">
       <PageHeader 
-        title="Customers"
-        description="Manage your customer database and records."
-        actionText="Add Customer"
+        title={t('customers.title')}
+        description={t('customers.description')}
+        actionText={t('customers.addCustomer')}
         actionIcon={UserPlus}
         onAction={() => handleOpenModal()}
       />
@@ -52,13 +54,13 @@ const CustomersPage = () => {
       <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1">
           <SearchInput 
-            placeholder="Search by name or phone..."
+            placeholder={t('customers.placeholder')}
             value={search}
             onChange={setSearch}
           />
         </div>
         <button className="flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all shadow-sm font-medium">
-          <Filter size={18} className="mr-2" /> Filters
+          <Filter size={18} className="mx-2" /> {t('common.filters') || 'Filters'}
         </button>
       </div>
 
@@ -72,11 +74,11 @@ const CustomersPage = () => {
       )}
 
       {isLoading ? (
-        <LoadingState message="Loading customers..." />
+        <LoadingState message={t('customers.loading')} />
       ) : loadError ? (
-        <ErrorState message="Failed to load customers." />
+        <ErrorState message={t('customers.error')} />
       ) : (
-        <Table headers={['Name', 'Contact', 'Vehicles', 'Join Date', 'Actions']}>
+        <Table headers={[t('customers.name'), t('customers.contact'), t('customers.vehicles'), t('customers.joinDate'), t('common.actions')]}>
           {data?.data?.customers?.length > 0 ? (
             data.data.customers.map((customer) => (
               <TableRow key={customer.id}>
@@ -84,12 +86,12 @@ const CustomersPage = () => {
                   {customer.firstName} {customer.lastName}
                 </TableCell>
                 <TableCell>
-                  <div className="text-sm font-medium text-slate-600">{customer.email || 'No email'}</div>
+                  <div className="text-sm font-medium text-slate-600">{customer.email || t('customers.noEmail')}</div>
                   <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{customer.phoneNumber}</div>
                 </TableCell>
                 <TableCell>
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-tight bg-blue-50 text-blue-700 border border-blue-100">
-                    {customer.vehicles?.length || 0} Vehicles
+                    {t('customers.vehiclesCount', { count: customer.vehicles?.length || 0 })}
                   </span>
                 </TableCell>
                 <TableCell className="text-slate-500 text-sm">
@@ -116,7 +118,7 @@ const CustomersPage = () => {
           ) : (
             <TableRow>
               <TableCell colSpan={5}>
-                <EmptyState message="No customers found matching your criteria." icon={Users} />
+                <EmptyState message={t('customers.empty')} icon={Users} />
               </TableCell>
             </TableRow>
           )}
@@ -124,19 +126,19 @@ const CustomersPage = () => {
       )}
 
       <div className="flex items-center justify-between text-sm text-slate-500 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-        <p>Page {page} of {data?.data?.totalPages || 1}</p>
-        <div className="flex space-x-2">
+        <p>{t('common.page')} {page} {t('common.of')} {data?.data?.totalPages || 1}</p>
+        <div className={`flex ${t('dir') === 'rtl' ? 'space-x-reverse space-x-2' : 'space-x-2'}`}>
           <button 
             disabled={page === 1}
             onClick={() => setPage(p => p - 1)}
             className="px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-all font-bold">
-            Previous
+            {t('common.previous')}
           </button>
           <button 
             disabled={page >= (data?.data?.totalPages || 1)}
             onClick={() => setPage(p => p + 1)}
             className="px-4 py-2 border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 transition-all font-bold">
-            Next
+            {t('common.next')}
           </button>
         </div>
       </div>
@@ -144,7 +146,7 @@ const CustomersPage = () => {
       <Modal 
         isOpen={isModalOpen} 
         onClose={handleCloseModal} 
-        title={selectedCustomer ? 'Edit Customer' : 'Add New Customer'}
+        title={selectedCustomer ? t('customers.editCustomer') : t('customers.addCustomer')}
       >
         <CustomerForm 
           customer={selectedCustomer} 
