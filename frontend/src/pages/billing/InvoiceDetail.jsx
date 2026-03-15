@@ -33,13 +33,24 @@ const InvoiceDetail = () => {
     e.preventDefault();
     setError('');
     try {
-      await recordPayment({ invoiceId: id, ...paymentData }).unwrap();
+      await recordPayment({ 
+        invoiceId: id, 
+        ...paymentData,
+        amount: parseFloat(paymentData.amount)
+      }).unwrap();
       setIsModalOpen(false);
       setPaymentData({ amount: '', paymentMethod: 'Cash', transactionId: '', notes: '' });
     } catch (err) {
-      setError(err.data?.message || 'Failed to record payment');
+      if (err.data?.errors) {
+        setError(err.data.errors[0]?.message || 'Validation error');
+      } else {
+        setError(err.data?.message || 'Failed to record payment');
+      }
     }
   };
+
+  const totalPaid = invoice.payments?.reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
+  const remainingValue = parseFloat(invoice.totalAmount) - totalPaid;
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -55,7 +66,7 @@ const InvoiceDetail = () => {
         </div>
         <div className="flex items-center space-x-3">
           <button 
-            disabled={invoice.status === 'Paid'}
+            disabled={invoice.status === 'Paid' || remainingValue <= 0}
             onClick={() => setIsModalOpen(true)}
             className="flex items-center px-6 py-2.5 bg-blue-600 text-white rounded-2xl font-black text-sm hover:bg-blue-700 transition-all shadow-xl shadow-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider"
           >
@@ -88,7 +99,7 @@ const InvoiceDetail = () => {
         setPaymentData={setPaymentData}
         isRecording={isRecording}
         error={error}
-        maxAmount={parseFloat(invoice.totalAmount) - parseFloat(invoice.paidAmount)}
+        maxAmount={remainingValue}
       />
     </div>
   );

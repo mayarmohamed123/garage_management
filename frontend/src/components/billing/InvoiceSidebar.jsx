@@ -1,7 +1,8 @@
 import React from 'react';
 
 const InvoiceSidebar = ({ invoice }) => {
-  const remainingValue = parseFloat(invoice.totalAmount) - parseFloat(invoice.paidAmount);
+  const totalPaid = invoice.payments?.reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
+  const remainingValue = parseFloat(invoice.totalAmount) - totalPaid;
 
   return (
     <div className="space-y-8">
@@ -14,7 +15,7 @@ const InvoiceSidebar = ({ invoice }) => {
           </div>
           <div className="flex justify-between items-center text-green-400">
             <span className="text-sm">Total Paid</span>
-            <span className="font-bold">-${parseFloat(invoice.paidAmount).toFixed(2)}</span>
+            <span className="font-bold">-${totalPaid.toFixed(2)}</span>
           </div>
           <div className="pt-6 border-t border-slate-800 flex justify-between items-center">
             <span className="text-blue-400 font-bold uppercase tracking-widest text-xs">Remaining</span>

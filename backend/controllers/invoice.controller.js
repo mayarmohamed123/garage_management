@@ -9,7 +9,7 @@ const generateInvoice = asyncHandler(async (req, res) => {
 });
 
 const getInvoices = asyncHandler(async (req, res) => {
-    const result = await invoiceService.getAllInvoices();
+    const result = await invoiceService.getAllInvoices(req.query);
     apiResponse(res, 200, "Invoices retrieved successfully", result);
 });
 

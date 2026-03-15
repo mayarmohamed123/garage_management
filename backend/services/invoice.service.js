@@ -44,11 +44,41 @@ class InvoiceService {
         return invoice;
     }
 
-    async getAllInvoices() {
-        return await db.invoices.findAll({
-            include: [{ model: db.serviceOrders, as: 'serviceOrder' }],
+    async getAllInvoices(query = {}) {
+        const { search = '', page = 1, limit = 10 } = query;
+        const offset = (page - 1) * limit;
+        const { Op } = require('sequelize');
+
+        const where = {};
+        if (search) {
+            where[Op.or] = [
+                { invoiceNumber: { [Op.like]: `%${search}%` } }
+            ];
+        }
+
+        const { count, rows } = await db.invoices.findAndCountAll({
+            where,
+            include: [
+                { 
+                    model: db.serviceOrders, 
+                    as: 'serviceOrder',
+                    include: [
+                        { model: db.vehicles, as: 'vehicle', include: [{ model: db.customers, as: 'customer' }] }
+                    ]
+                },
+                { model: db.payments, as: 'payments' }
+            ],
+            limit: parseInt(limit),
+            offset: parseInt(offset),
             order: [['createdAt', 'DESC']]
         });
+
+        return {
+            totalItems: count,
+            invoices: rows,
+            totalPages: Math.ceil(count / limit),
+            currentPage: parseInt(page)
+        };
     }
 
     async updateInvoiceStatus(id, status) {

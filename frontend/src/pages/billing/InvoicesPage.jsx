@@ -37,60 +37,62 @@ const InvoicesPage = () => {
         <ErrorState message="Error loading invoices." />
       ) : (
         <Table headers={['Invoice #', 'Customer', 'Total', 'Paid', 'Status', 'Date', 'Actions']}>
-          {data?.data?.invoices?.length > 0 ? (
-            data.data.invoices.map((invoice) => (
-              <TableRow key={invoice.id}>
-                <TableCell className="font-bold text-blue-600">
-                  #{invoice.invoiceNumber}
-                </TableCell>
-                <TableCell>
-                  <div className="font-semibold text-slate-900">{invoice.serviceOrder?.customer?.firstName} {invoice.serviceOrder?.customer?.lastName}</div>
-                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Order #{invoice.serviceOrder?.orderNumber}</div>
-                </TableCell>
-                <TableCell className="font-bold text-slate-900">
-                  ${parseFloat(invoice.totalAmount).toFixed(2)}
-                </TableCell>
-                <TableCell className="text-green-600 font-bold">
-                  ${parseFloat(invoice.paidAmount).toFixed(2)}
-                </TableCell>
-                <TableCell>
-                  {user?.role === 'Accountant' || user?.role === 'Admin' ? (
-                    <select 
-                      className={`px-2 py-1 rounded-lg text-xs font-bold border outline-none bg-white border-slate-200 transition-all focus:ring-2 focus:ring-blue-500`}
-                      value={invoice.status}
-                      onChange={(e) => updateStatus({ id: invoice.id, status: e.target.value })}
-                    >
-                      <option value="Unpaid">Unpaid</option>
-                      <option value="Paid">Paid</option>
-                      <option value="Partial">Partial</option>
-                      <option value="Overdue">Overdue</option>
-                    </select>
-                  ) : (
-                    <StatusBadge status={invoice.status} type="invoice" />
-                  )}
-                </TableCell>
-                <TableCell className="text-slate-500 text-sm">
-                  {new Date(invoice.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <button 
-                      onClick={() => navigate(`/invoices/${invoice.id}`)}
-                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                    >
-                      <Eye size={18} />
-                    </button>
-                     <button 
-                        onClick={() => alert('PDF Generation feature coming soon!')}
-                        className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+          {data?.data?.invoices?.length > 0 ? 
+            data.data.invoices.map((invoice) => {
+              const totalPaid = invoice.payments?.reduce((sum, p) => sum + parseFloat(p.amount), 0) || 0;
+              return (
+                <TableRow key={invoice.id}>
+                  <TableCell className="font-bold text-blue-600">
+                    #{invoice.invoiceNumber}
+                  </TableCell>
+                  <TableCell>
+                    <div className="font-semibold text-slate-900">{invoice.serviceOrder?.vehicle?.customer?.firstName} {invoice.serviceOrder?.vehicle?.customer?.lastName}</div>
+                    <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">Order #{invoice.serviceOrder?.orderNumber}</div>
+                  </TableCell>
+                  <TableCell className="font-bold text-slate-900">
+                    ${parseFloat(invoice.totalAmount).toFixed(2)}
+                  </TableCell>
+                  <TableCell className="text-green-600 font-bold">
+                    ${totalPaid.toFixed(2)}
+                  </TableCell>
+                  <TableCell>
+                    {user?.role === 'Accountant' || user?.role === 'Admin' ? (
+                      <select 
+                        className={`px-2 py-1 rounded-lg text-xs font-bold border outline-none bg-white border-slate-200 transition-all focus:ring-2 focus:ring-blue-500`}
+                        value={invoice.status}
+                        onChange={(e) => updateStatus({ id: invoice.id, status: e.target.value })}
                       >
-                        <Download size={18} />
+                        <option value="Unpaid">Unpaid</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Partial">Partial</option>
+                        <option value="Overdue">Overdue</option>
+                      </select>
+                    ) : (
+                      <StatusBadge status={invoice.status} type="invoice" />
+                    )}
+                  </TableCell>
+                  <TableCell className="text-slate-500 text-sm">
+                    {new Date(invoice.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <button 
+                        onClick={() => navigate(`/invoices/${invoice.id}`)}
+                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                      >
+                        <Eye size={18} />
                       </button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
+                      <button 
+                          onClick={() => alert('PDF Generation feature coming soon!')}
+                          className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+                        >
+                          <Download size={18} />
+                        </button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              );
+            }) : (
             <TableRow>
               <TableCell colSpan={7}>
                 <EmptyState message="No invoices found matching your criteria." icon={Receipt} />

@@ -29,7 +29,7 @@ const RecordPaymentModal = ({ isOpen, onClose, onSubmit, paymentData, setPayment
             <option value="Cash">Cash</option>
             <option value="Card">Credit/Debit Card</option>
             <option value="Transfer">Bank Transfer</option>
-            <option value="Cheque">Cheque</option>
+            <option value="Check">Check</option>
           </select>
         </div>
         <div>
