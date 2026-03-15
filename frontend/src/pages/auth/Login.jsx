@@ -69,12 +69,22 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all shadow-lg shadow-blue-500/20"
             >
               {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         </form>
+
+        <p className="text-center text-gray-400 text-sm font-medium">
+          Don't have an account?{' '}
+          <button 
+            onClick={() => navigate('/register')}
+            className="text-blue-500 font-bold hover:text-blue-400 transition-colors"
+          >
+            Create Account
+          </button>
+        </p>
       </div>
     </div>
   );

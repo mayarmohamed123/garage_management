@@ -6,6 +6,8 @@ const productSchema = z.object({
     description: z.string().optional(),
     price: z.preprocess((val) => parseFloat(val), z.number().positive()),
     stockQuantity: z.preprocess((val) => parseInt(val), z.number().int().min(0)),
+    minStock: z.preprocess((val) => parseInt(val || 5), z.number().int().min(0)).optional(),
+    category: z.string().optional(),
     image: z.string().optional()
 });
 

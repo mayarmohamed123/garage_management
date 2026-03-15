@@ -31,7 +31,7 @@ const ServiceOrderDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
-  const { data: orderData, isLoading: isLoadingOrder } = useGetServiceOrderQuery(id);
+  const { data: orderData, isLoading: isLoadingOrder, isError: isLoadError } = useGetServiceOrderQuery(id);
   const [updateStatus, { isLoading: isUpdatingStatus }] = useUpdateServiceOrderStatusMutation();
   const [updateOrder] = useUpdateServiceOrderMutation();
   const [addPart, { isLoading: isAddingPart }] = useAddPartToOrderMutation();
@@ -47,9 +47,22 @@ const ServiceOrderDetail = () => {
   const [error, setError] = useState('');
 
   if (isLoadingOrder) return <div className="p-20 text-center animate-pulse text-slate-400">Loading order details...</div>;
-  if (!orderData) return <div className="p-20 text-center text-red-500">Service Order not found.</div>;
+  
+  if (isLoadError || !orderData?.data) return (
+    <div className="p-20 text-center">
+      <div className="bg-red-50 text-red-600 p-8 rounded-2xl border border-red-100 inline-block max-w-md">
+        <AlertCircle size={48} className="mx-auto mb-4" />
+        <h3 className="text-xl font-bold mb-2">Service Order Not Found</h3>
+        <p className="text-sm mb-6">The order you're looking for doesn't exist or has been removed.</p>
+        <button onClick={() => navigate('/service-orders')} className="px-6 py-2 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all">
+          Back to Orders
+        </button>
+      </div>
+    </div>
+  );
 
   const order = orderData.data;
+
   const isAdminOrManager = ['Admin', 'Manager'].includes(user?.role);
   const isTechnician = user?.role === 'Technician';
   const isAccountant = user?.role === 'Accountant';
@@ -96,7 +109,7 @@ const ServiceOrderDetail = () => {
   };
 
   const totals = {
-    parts: order.parts?.reduce((sum, p) => sum + (p.priceAtTime * p.ServicePart.quantity), 0) || 0,
+    parts: order.products?.reduce((sum, p) => sum + (parseFloat(p.ServicePart.unitPrice) * p.ServicePart.quantity), 0) || 0,
     labor: parseFloat(order.laborCost) || 0
   };
   const grandTotal = totals.parts + totals.labor;
@@ -153,9 +166,9 @@ const ServiceOrderDetail = () => {
                 <h4 className="flex items-center text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider">
                     <User size={16} className="mr-2" /> Customer Information
                 </h4>
-                <p className="text-lg font-bold text-slate-900">{order.customer?.firstName} {order.customer?.lastName}</p>
-                <p className="text-slate-500">{order.customer?.phoneNumber}</p>
-                <p className="text-sm border-t border-slate-50 mt-3 pt-3 text-slate-400">{order.customer?.address || 'No address provided'}</p>
+                <p className="text-lg font-bold text-slate-900">{order.vehicle?.customer?.firstName} {order.vehicle?.customer?.lastName}</p>
+                <p className="text-slate-500">{order.vehicle?.customer?.phoneNumber}</p>
+                <p className="text-sm border-t border-slate-50 mt-3 pt-3 text-slate-400">{order.vehicle?.customer?.address || 'No address provided'}</p>
             </div>
             <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                 <h4 className="flex items-center text-sm font-bold text-slate-400 mb-4 uppercase tracking-wider">
@@ -190,7 +203,7 @@ const ServiceOrderDetail = () => {
                       >
                           <option value="">Select a part to add...</option>
                           {productData?.data?.products?.map(p => (
-                              <option key={p.id} value={p.id} disabled={p.stock <= 0}>{p.name} (${p.price}) - Stock: {p.stock}</option>
+                              <option key={p.id} value={p.id} disabled={p.stockQuantity <= 0}>{p.name} (${p.price}) - Stock: {p.stockQuantity}</option>
                           ))}
                       </select>
                       <input 
@@ -211,17 +224,17 @@ const ServiceOrderDetail = () => {
                 )}
 
                 <div className="space-y-3">
-                    {order.parts?.length > 0 ? order.parts.map(part => (
+                    {order.products?.length > 0 ? order.products.map(part => (
                         <div key={part.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100 group">
                             <div className="flex items-center">
                                 <Package size={16} className="text-slate-400 mr-3" />
                                 <div>
                                     <p className="text-sm font-bold text-slate-900">{part.name}</p>
-                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Qty: {part.ServicePart.quantity} @ ${part.priceAtTime}</p>
+                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Qty: {part.ServicePart.quantity} @ ${part.ServicePart.unitPrice}</p>
                                 </div>
                             </div>
                             <div className="flex items-center space-x-4">
-                                <span className="text-sm font-bold text-slate-900">${(part.priceAtTime * part.ServicePart.quantity).toFixed(2)}</span>
+                                <span className="text-sm font-bold text-slate-900">${(parseFloat(part.ServicePart.unitPrice) * part.ServicePart.quantity).toFixed(2)}</span>
                                 {!isAccountant && (
                                   <button 
                                       onClick={() => removePart({ orderId: id, partId: part.id })}
@@ -268,7 +281,7 @@ const ServiceOrderDetail = () => {
                 <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-4">Technician Assigned</h4>
                 <div className="flex items-center p-3 bg-blue-50 rounded-xl border border-blue-100">
                     <div className="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold mr-3">
-                        {order.technician ? order.technician.firstName.charAt(0) : '?'}
+                        {order.technician?.firstName ? order.technician.firstName.charAt(0) : '?'}
                     </div>
                     <div>
                         <p className="text-sm font-bold text-slate-900">{order.technician ? `${order.technician.firstName} ${order.technician.lastName}` : 'Unassigned'}</p>
@@ -289,7 +302,7 @@ const ServiceOrderDetail = () => {
 
       <Modal isOpen={isTechModalOpen} onClose={() => setIsTechModalOpen(false)} title="Assign Technician">
         <div className="space-y-3">
-          {employeeData?.data?.filter(e => e.role === 'Technician' || e.role === 'Admin').map(tech => (
+          {employeeData?.data?.employees?.filter(e => e.role === 'Technician' || e.role === 'Admin').map(tech => (
             <button
                key={tech.id}
                onClick={() => handleAssignTechnician(tech.id)}
@@ -304,7 +317,7 @@ const ServiceOrderDetail = () => {
                </div>
             </button>
           ))}
-          {(!employeeData?.data || employeeData.data.length === 0) && (
+          {(!employeeData?.data?.employees || employeeData.data.employees.length === 0) && (
              <div className="text-center py-6 text-slate-400 text-sm">No eligible staff found.</div>
           )}
         </div>
@@ -313,4 +326,30 @@ const ServiceOrderDetail = () => {
   );
 };
 
-export default ServiceOrderDetail;
+class ServiceOrderErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-20 text-center">
+          <div className="bg-red-50 text-red-600 p-8 rounded-2xl border border-red-100 inline-block max-w-lg text-left">
+            <h3 className="text-xl font-bold mb-2">Something went wrong</h3>
+            <p className="text-sm mb-4">{this.state.error?.message}</p>
+            <button onClick={() => window.location.href = '/service-orders'} className="px-6 py-2 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-all">
+              Back to Orders
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return <ServiceOrderDetail />;
+  }
+}
+
+export default ServiceOrderErrorBoundary;

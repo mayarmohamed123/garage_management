@@ -30,6 +30,15 @@ const Product = db.sequelize.define('Product', {
         allowNull: false,
         defaultValue: 0
     },
+    minStock: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 5
+    },
+    category: {
+        type: DataTypes.STRING,
+        allowNull: true
+    },
     image: {
         type: DataTypes.STRING,
         allowNull: true

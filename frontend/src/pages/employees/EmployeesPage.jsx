@@ -7,12 +7,15 @@ import {
   useDeleteEmployeeMutation
 } from '../../services/employeeService';
 import { Table, TableRow, TableCell } from '../../components/ui/Table';
-import { UserCircle, Shield, Power, ShieldCheck, UserCog, AlertCircle, X } from 'lucide-react';
+import { UserCircle, Shield, Power, ShieldCheck, UserCog, AlertCircle, X, Plus, Trash2 } from 'lucide-react';
 
 import Modal from '../../components/ui/Modal';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import PageHeader from '../../components/ui/PageHeader';
+import StatusBadge from '../../components/ui/StatusBadge';
+import { LoadingState } from '../../components/ui/States';
 
 const employeeSchema = z.object({
   firstName: z.string().min(2, "First name must be at least 2 characters"),
@@ -78,18 +81,12 @@ const EmployeesPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Employee Management</h2>
-          <p className="text-slate-500 text-sm mt-1">Manage staff accounts, roles, and system access.</p>
-        </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-md shadow-blue-500/20"
-        >
-          <Plus size={18} className="mr-2" /> New Employee
-        </button>
-      </div>
+      <PageHeader 
+        title="Employee Management"
+        description="Manage staff accounts, roles, and system access."
+        actionText="New Employee"
+        onAction={() => setIsModalOpen(true)}
+      />
 
       {error && (
         <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 flex items-center justify-between shadow-sm">
@@ -101,10 +98,10 @@ const EmployeesPage = () => {
       )}
 
       {isLoading ? (
-        <div className="p-20 text-center animate-pulse text-slate-400">Loading staff directory...</div>
+        <LoadingState message="Loading staff directory..." />
       ) : (
         <Table headers={['Employee', 'Email', 'Role', 'Status', 'Actions']}>
-          {data?.data?.length > 0 ? data.data.map(employee => (
+          {data?.data?.employees?.length > 0 ? data.data.employees.map(employee => (
             <TableRow key={employee.id}>
               <TableCell className="flex items-center">
                 <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold mr-3 border-2 border-white shadow-sm">
@@ -128,9 +125,7 @@ const EmployeesPage = () => {
                  </select>
               </TableCell>
               <TableCell>
-                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-tight border ${employee.status === 'active' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-red-100 text-red-700 border-red-200'}`}>
-                    {employee.status}
-                 </span>
+                 <StatusBadge status={employee.status} type="auth" />
               </TableCell>
               <TableCell>
                  <div className="flex items-center space-x-2">

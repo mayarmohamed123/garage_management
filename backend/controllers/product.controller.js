@@ -6,7 +6,8 @@ const { productSchema } = require('../validators/product.validator');
 const createProduct = asyncHandler(async (req, res) => {
     let productData = req.body;
     if (req.file) {
-        productData.image = req.file.path;
+        const type = req.query.type || 'products';
+        productData.image = `uploads/${type}/${req.file.filename}`;
     }
     const validatedData = productSchema.parse(productData);
     const result = await productService.createProduct(validatedData);
@@ -26,7 +27,8 @@ const getProduct = asyncHandler(async (req, res) => {
 const updateProduct = asyncHandler(async (req, res) => {
     let updateData = req.body;
     if (req.file) {
-        updateData.image = req.file.path;
+        const type = req.query.type || 'products';
+        updateData.image = `uploads/${type}/${req.file.filename}`;
     }
     const validatedData = productSchema.parse(updateData);
     const result = await productService.updateProduct(req.params.id, validatedData);

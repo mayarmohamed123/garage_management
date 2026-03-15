@@ -3,29 +3,35 @@ import { useNavigate } from 'react-router-dom';
 import { useCreateServiceOrderMutation } from '../../services/serviceOrderService';
 import { useGetCustomersQuery } from '../../services/customerService';
 import { useGetVehiclesQuery } from '../../services/vehicleService';
-import { User, Car, Calendar, ClipboardList, PenTool } from 'lucide-react';
+import { useGetEmployeesQuery } from '../../services/employeeService';
+import { User, Car, Calendar, ClipboardList, PenTool, UserCog } from 'lucide-react';
 
 const CreateServiceOrder = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     customerId: '',
     vehicleId: '',
+    technicianId: '',
     description: '',
-    estimatedCompletion: '',
+    estimatedCompletionDate: '',
     laborCost: '0'
   });
   const [error, setError] = useState('');
 
   const [createOrder, { isLoading: isCreating }] = useCreateServiceOrderMutation();
   const { data: customerData } = useGetCustomersQuery({ limit: 100 });
+  const { data: employeeData } = useGetEmployeesQuery();
   const { data: vehicleData } = useGetVehiclesQuery({ 
     customerId: formData.customerId, 
     limit: 100 
   }, { skip: !formData.customerId });
 
+  const technicians = employeeData?.data?.employees?.filter(e => e.role === 'Technician') || [];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.vehicleId) return setError('Please select a vehicle');
+    if (!formData.technicianId) return setError('Please select a technician');
     setError('');
     try {
       await createOrder(formData).unwrap();
@@ -84,6 +90,38 @@ const CreateServiceOrder = () => {
           </div>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Technician Selection */}
+          <div className="space-y-4">
+            <label className="flex items-center text-sm font-bold text-slate-700">
+              <UserCog size={18} className="mr-2 text-indigo-600" /> Assigned Technician
+            </label>
+            <select
+              required
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all appearance-none"
+              value={formData.technicianId}
+              onChange={(e) => setFormData({ ...formData, technicianId: e.target.value })}
+            >
+              <option value="">Select a technician</option>
+              {technicians.map(t => (
+                <option key={t.id} value={t.id}>{t.firstName} {t.lastName}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-4">
+            <label className="flex items-center text-sm font-bold text-slate-700">
+              <Calendar size={18} className="mr-2 text-green-600" /> Estimated Completion
+            </label>
+            <input
+              type="date"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
+              value={formData.estimatedCompletionDate}
+              onChange={(e) => setFormData({ ...formData, estimatedCompletionDate: e.target.value })}
+            />
+          </div>
+        </div>
+
         <div className="space-y-4">
           <label className="flex items-center text-sm font-bold text-slate-700">
             <ClipboardList size={18} className="mr-2 text-orange-600" /> Problem Description
@@ -99,18 +137,7 @@ const CreateServiceOrder = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-4">
-            <label className="flex items-center text-sm font-bold text-slate-700">
-              <Calendar size={18} className="mr-2 text-green-600" /> Estimated Completion
-            </label>
-            <input
-              type="date"
-              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
-              value={formData.estimatedCompletion}
-              onChange={(e) => setFormData({ ...formData, estimatedCompletion: e.target.value })}
-            />
-          </div>
-          <div className="space-y-4">
+          <div className="space-y-4 md:col-start-2">
             <label className="flex items-center text-sm font-bold text-slate-700">
               <PenTool size={18} className="mr-2 text-blue-600" /> Initial Labor Cost ($)
             </label>

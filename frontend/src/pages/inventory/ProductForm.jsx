@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCreateProductMutation, useUpdateProductMutation } from '../../services/productService';
+import { Package } from 'lucide-react';
 
 const ProductForm = ({ product, onSuccess, onCancel }) => {
   const [formData, setFormData] = useState({
@@ -7,7 +8,7 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
     description: '',
     sku: '',
     price: '',
-    stock: '',
+    stockQuantity: '',
     minStock: '5',
     category: ''
   });
@@ -27,12 +28,12 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
                 description: product.description || '',
                 sku: product.sku || '',
                 price: product.price || '',
-                stock: product.stock || '',
+                stockQuantity: product.stockQuantity || '',
                 minStock: product.minStock || '5',
                 category: product.category || ''
             });
-            if (product.imageUrl) {
-                setImagePreview(`${import.meta.env.VITE_API_BASE_URL}/${product.imageUrl.replace(/\\/g, '/')}`);
+            if (product.image) {
+                setImagePreview(`http://localhost:5000/${product.image.replace(/\\/g, '/')}`);
             }
         }, 0);
         return () => clearTimeout(timer);
@@ -152,8 +153,8 @@ const ProductForm = ({ product, onSuccess, onCancel }) => {
             type="number"
             required
             className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
-            value={formData.stock}
-            onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+            value={formData.stockQuantity}
+            onChange={(e) => setFormData({ ...formData, stockQuantity: e.target.value })}
           />
         </div>
         <div>

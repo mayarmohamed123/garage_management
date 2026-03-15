@@ -4,6 +4,9 @@ import { Table, TableRow, TableCell } from '../../components/ui/Table';
 import Modal from '../../components/ui/Modal';
 import ProductForm from './ProductForm';
 import { Search, Plus, Package, Edit, Trash2, AlertTriangle, AlertCircle, X } from 'lucide-react';
+import PageHeader from '../../components/ui/PageHeader';
+import SearchInput from '../../components/ui/SearchInput';
+import { LoadingState, ErrorState, EmptyState } from '../../components/ui/States';
 
 const InventoryPage = () => {
   const [search, setSearch] = useState('');
@@ -38,29 +41,18 @@ const InventoryPage = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Inventory</h2>
-          <p className="text-slate-500 text-sm mt-1">Manage spare parts, stock levels, and pricing.</p>
-        </div>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-sm"
-        >
-          <Plus size={18} className="mr-2" /> Add Part
-        </button>
-      </div>
+      <PageHeader 
+        title="Inventory"
+        description="Manage spare parts, stock levels, and pricing."
+        actionText="Add Part"
+        onAction={() => handleOpenModal()}
+      />
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-        <input
-          type="text"
-          placeholder="Search by part name or SKU..."
-          className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+      <SearchInput 
+        placeholder="Search by part name or SKU..."
+        value={search}
+        onChange={setSearch}
+      />
 
       {error && (
         <div className="bg-red-50 text-red-600 p-4 rounded-xl border border-red-100 flex items-center justify-between shadow-sm">
@@ -72,14 +64,9 @@ const InventoryPage = () => {
       )}
 
       {isLoading ? (
-        <div className="flex justify-center items-center py-20 text-slate-400">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
-          Loading inventory...
-        </div>
+        <LoadingState message="Loading inventory..." />
       ) : loadError ? (
-        <div className="bg-red-50 text-red-600 p-6 rounded-2xl border border-red-100 text-center">
-            Error loading products.
-        </div>
+        <ErrorState message="Error loading products." />
       ) : (
         <Table headers={['Part Info', 'SKU', 'Stock', 'Price', 'Actions']}>
           {data?.data?.products?.length > 0 ? (
@@ -87,8 +74,8 @@ const InventoryPage = () => {
               <TableRow key={product.id}>
                 <TableCell className="flex items-center">
                   <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500 mr-3 border border-slate-200 overflow-hidden">
-                    {product.imageUrl ? (
-                        <img src={`${import.meta.env.VITE_API_BASE_URL}/${product.imageUrl.replace(/\\/g, '/')}`} alt={product.name} className="h-full w-full object-cover" />
+                    {product.image ? (
+                        <img src={`http://localhost:5000/${product.image.replace(/\\/g, '/')}`} alt={product.name} className="h-full w-full object-cover" />
                     ) : (
                         <Package size={20} />
                     )}
@@ -103,17 +90,17 @@ const InventoryPage = () => {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center">
-                    <span className={`font-bold ${product.stock <= product.minStock ? 'text-red-600' : 'text-slate-900'}`}>
-                        {product.stock}
+                    <span className={`font-bold ${product.stockQuantity <= (product.minStock || 5) ? 'text-red-600' : 'text-slate-900'}`}>
+                        {product.stockQuantity}
                     </span>
-                    {product.stock <= product.minStock && (
+                    {product.stockQuantity <= (product.minStock || 5) && (
                         <AlertTriangle size={14} className="ml-2 text-red-500" />
                     )}
                   </div>
-                  <div className="text-[10px] text-slate-400">Min: {product.minStock}</div>
+                  <div className="text-[10px] text-slate-400">Min: {product.minStock || 5}</div>
                 </TableCell>
                 <TableCell className="font-bold text-slate-900">
-                  ${parseFloat(product.price).toFixed(2)}
+                  {product.price ? `$${parseFloat(product.price).toFixed(2)}` : '$0.00'}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center space-x-2">
@@ -135,8 +122,8 @@ const InventoryPage = () => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={5} className="text-center py-12 text-slate-400">
-                No products found in inventory.
+              <TableCell colSpan={5}>
+                <EmptyState message="No products found in inventory." icon={Package} />
               </TableCell>
             </TableRow>
           )}

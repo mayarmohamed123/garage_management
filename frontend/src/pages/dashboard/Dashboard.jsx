@@ -28,26 +28,8 @@ import { useSelector } from 'react-redux';
 import { useGetDashboardStatsQuery } from '../../services/dashboardService';
 import { useGetProductsQuery } from '../../services/productService';
 import { useGetServiceOrdersQuery } from '../../services/serviceOrderService';
-
-const DashboardCard = (props) => {
-  const { title, value, color, trend, trendValue } = props;
-  return (
-    <div className="bg-white p-6 rounded-4xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-      <div className="flex justify-between items-start mb-4">
-        <div className={`p-3 rounded-2xl ${color} bg-opacity-10 group-hover:scale-110 transition-transform`}>
-          <props.icon className={color.replace('bg-', 'text-')} size={24} />
-        </div>
-        {trend && (
-          <span className={`flex items-center text-xs font-bold ${trend === 'up' ? 'text-green-500' : 'text-red-500'} bg-slate-50 px-2 py-1 rounded-full`}>
-            <TrendingUp size={12} className="mr-1" /> {trendValue}
-          </span>
-        )}
-      </div>
-      <h3 className="text-slate-500 font-bold text-xs uppercase tracking-widest mb-1">{title}</h3>
-      <p className="text-3xl font-extrabold text-slate-900 tracking-tighter">{value}</p>
-    </div>
-  );
-};
+import StatsCard from '../../components/ui/StatsCard';
+import PageHeader from '../../components/ui/PageHeader';
 
 const Dashboard = () => {
   const { user } = useSelector((state) => state.auth);
@@ -69,19 +51,21 @@ const Dashboard = () => {
   const isTechnician = user?.role === 'Technician';
   const isAccountant = user?.role === 'Accountant';
 
+  const getHeaderContent = () => {
+      if (isTechnician) return { title: "My Maintenance Hub", desc: "Manage your repair schedule and task updates." };
+      if (isAccountant) return { title: "Finance Overview", desc: "Monitor billing, payments, and financial health." };
+      return { title: "Center Overview", desc: "Operational insights and real-time statistics for your garage." };
+  };
+
+  const header = getHeaderContent();
+
   return (
     <div className="space-y-8 pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-             {isTechnician ? 'My Maintenance Hub' : isAccountant ? 'Finance Overview' : 'Center Overview'}
-          </h1>
-          <p className="text-slate-500 mt-1">
-             {isTechnician ? 'Manage your repair schedule and task updates.' : 
-              isAccountant ? 'Monitor billing, payments, and financial health.' : 
-              'Operational insights and real-time statistics for your garage.'}
-          </p>
-        </div>
+        <PageHeader 
+          title={header.title}
+          description={header.desc}
+        />
         <div className="flex items-center space-x-3 text-sm">
            <span className="flex items-center py-2 px-4 bg-white rounded-xl border border-slate-100 font-bold text-slate-600 shadow-sm uppercase tracking-wider text-[10px]">
               <Clock size={16} className="mr-2 text-blue-500" /> Shift Active: {new Date().toLocaleDateString()}
@@ -92,26 +76,26 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {isAdminOrManager && (
           <>
-            <DashboardCard title="Total Customers" value={stats.totalCustomers} icon={Users} color="bg-blue-600" trend="up" trendValue="+12%" />
-            <DashboardCard title="Vehicles in Registry" value={stats.totalVehicles} icon={Car} color="bg-purple-600" trend="up" trendValue="+8%" />
-            <DashboardCard title="Active Orders" value={stats.activeServiceOrders} icon={Wrench} color="bg-orange-600" trend="down" trendValue="-2%" />
-            <DashboardCard title="Monthly Revenue" value={`$${parseFloat(stats.monthlyRevenue).toLocaleString()}`} icon={DollarSign} color="bg-green-600" trend="up" trendValue="+24%" />
+            <StatsCard title="Total Customers" value={stats.totalCustomers} icon={Users} color="bg-blue-600" trend="up" trendValue="+12%" />
+            <StatsCard title="Vehicles in Registry" value={stats.totalVehicles} icon={Car} color="bg-purple-600" trend="up" trendValue="+8%" />
+            <StatsCard title="Active Orders" value={stats.activeServiceOrders} icon={Wrench} color="bg-orange-600" trend="down" trendValue="-2%" />
+            <StatsCard title="Monthly Revenue" value={`$${parseFloat(stats.monthlyRevenue).toLocaleString()}`} icon={DollarSign} color="bg-green-600" trend="up" trendValue="+24%" />
           </>
         )}
         {isTechnician && (
           <>
-            <DashboardCard title="My Workload" value={ordersData?.data?.serviceOrders?.length || 0} icon={ClipboardList} color="bg-blue-600" />
-            <DashboardCard title="Vehicles Ready" value="2" icon={Car} color="bg-green-600" />
-            <DashboardCard title="Waiting Parts" value="1" icon={AlertTriangle} color="bg-orange-600" />
-            <DashboardCard title="Efficiency" value="94%" icon={TrendingUp} color="bg-purple-600" />
+            <StatsCard title="My Workload" value={ordersData?.data?.serviceOrders?.length || 0} icon={ClipboardList} color="bg-blue-600" />
+            <StatsCard title="Vehicles Ready" value="2" icon={Car} color="bg-green-600" />
+            <StatsCard title="Waiting Parts" value="1" icon={AlertTriangle} color="bg-orange-600" />
+            <StatsCard title="Efficiency" value="94%" icon={TrendingUp} color="bg-purple-600" />
           </>
         )}
         {isAccountant && (
           <>
-            <DashboardCard title="Monthly Revenue" value={`$${parseFloat(stats.monthlyRevenue).toLocaleString()}`} icon={DollarSign} color="bg-green-600" trend="up" trendValue="+24%" />
-            <DashboardCard title="Unpaid Invoices" value="4" icon={AlertTriangle} color="bg-red-600" />
-            <DashboardCard title="Recent Payments" value="12" icon={CreditCard} color="bg-blue-600" />
-            <DashboardCard title="Net Margin" value="18%" icon={TrendingUp} color="bg-purple-600" trend="up" trendValue="+2%" />
+            <StatsCard title="Monthly Revenue" value={`$${parseFloat(stats.monthlyRevenue).toLocaleString()}`} icon={DollarSign} color="bg-green-600" trend="up" trendValue="+24%" />
+            <StatsCard title="Unpaid Invoices" value="4" icon={AlertTriangle} color="bg-red-600" />
+            <StatsCard title="Recent Payments" value="12" icon={CreditCard} color="bg-blue-600" />
+            <StatsCard title="Net Margin" value="18%" icon={TrendingUp} color="bg-purple-600" trend="up" trendValue="+2%" />
           </>
         )}
       </div>

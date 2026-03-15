@@ -3,6 +3,10 @@ import { useGetServiceOrdersQuery } from '../../services/serviceOrderService';
 import { Table, TableRow, TableCell } from '../../components/ui/Table';
 import { Search, Plus, Wrench, Clock, CheckCircle, AlertCircle, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../components/ui/PageHeader';
+import SearchInput from '../../components/ui/SearchInput';
+import StatusBadge from '../../components/ui/StatusBadge';
+import { LoadingState, ErrorState } from '../../components/ui/States';
 
 const ServiceOrdersPage = () => {
   const [search, setSearch] = useState('');
@@ -11,61 +15,25 @@ const ServiceOrdersPage = () => {
   
   const { data, isLoading, error } = useGetServiceOrdersQuery({ search, page, limit: 10 });
 
-  const getStatusStyle = (status) => {
-    switch (status) {
-      case 'Pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'In Progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'Completed': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Cancelled': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-slate-100 text-slate-800 border-slate-200';
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'Pending': return <Clock size={12} className="mr-1" />;
-      case 'In Progress': return <Wrench size={12} className="mr-1" />;
-      case 'Completed': return <CheckCircle size={12} className="mr-1" />;
-      case 'Cancelled': return <AlertCircle size={12} className="mr-1" />;
-      default: return null;
-    }
-  };
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900">Service Orders</h2>
-          <p className="text-slate-500 text-sm mt-1">Track repair jobs, status, and technician assignments.</p>
-        </div>
-        <button 
-          onClick={() => navigate('/service-orders/create')}
-          className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all shadow-sm"
-        >
-          <Plus size={18} className="mr-2" /> New Order
-        </button>
-      </div>
+      <PageHeader 
+        title="Service Orders"
+        description="Track repair jobs, status, and technician assignments."
+        actionText="New Order"
+        onAction={() => navigate('/service-orders/create')}
+      />
 
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-        <input
-          type="text"
-          placeholder="Search by order #, vehicle, or customer..."
-          className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 transition-all"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+      <SearchInput 
+        placeholder="Search by order #, vehicle, or customer..."
+        value={search}
+        onChange={setSearch}
+      />
 
       {isLoading ? (
-        <div className="flex justify-center items-center py-20 text-slate-400">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
-          Loading orders...
-        </div>
+        <LoadingState message="Loading orders..." />
       ) : error ? (
-        <div className="bg-red-50 text-red-600 p-6 rounded-2xl border border-red-100 text-center">
-            Error loading service orders.
-        </div>
+        <ErrorState message="Error loading service orders." />
       ) : (
         <Table headers={['Order #', 'Customer & Vehicle', 'Status', 'Technician', 'Date', 'Actions']}>
           {data?.data?.serviceOrders?.length > 0 ? (
@@ -75,14 +43,11 @@ const ServiceOrdersPage = () => {
                   #{order.orderNumber}
                 </TableCell>
                 <TableCell>
-                  <div className="font-semibold text-slate-900">{order.customer?.firstName} {order.customer?.lastName}</div>
+                  <div className="font-semibold text-slate-900">{order.vehicle?.customer?.firstName} {order.vehicle?.customer?.lastName}</div>
                   <div className="text-xs text-slate-400">{order.vehicle?.make} {order.vehicle?.model} ({order.vehicle?.licensePlate})</div>
                 </TableCell>
                 <TableCell>
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusStyle(order.status)}`}>
-                    {getStatusIcon(order.status)}
-                    {order.status}
-                  </span>
+                  <StatusBadge status={order.status} type="service" />
                 </TableCell>
                 <TableCell>
                   <div className="text-sm text-slate-600">
@@ -104,8 +69,8 @@ const ServiceOrdersPage = () => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-12 text-slate-400">
-                No service orders found.
+              <TableCell colSpan={6}>
+                <EmptyState message="No service orders found matching your search." />
               </TableCell>
             </TableRow>
           )}

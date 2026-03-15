@@ -1,6 +1,6 @@
 const app = require('./app');
 const config = require('./config/env');
-const db = require("./config/db.js");
+const db = require("./models/index.js");
 
 const PORT = config.PORT || 5000;
 
