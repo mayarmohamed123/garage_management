@@ -1,13 +1,12 @@
-const db = require('../models/index');
-
+const userRepository = require('../repositories/UserRepository');
 const bcrypt = require('bcryptjs');
+const { Op } = require('sequelize');
 
 class EmployeeService {
     async getAllEmployees(query = {}) {
         const { page = 1, limit = 10, search = '' } = query;
         const offset = (page - 1) * limit;
 
-        const { Op } = require('sequelize');
         const where = { role: { [Op.ne]: 'Admin' } };
 
         if (search) {
@@ -18,7 +17,7 @@ class EmployeeService {
             ];
         }
 
-        const { count, rows } = await db.users.findAndCountAll({
+        const { count, rows } = await userRepository.findAndCountAll({
             where,
             attributes: { exclude: ['password'] },
             limit: parseInt(limit),
@@ -36,13 +35,13 @@ class EmployeeService {
 
     async createEmployee(employeeData) {
         const { email, password } = employeeData;
-        const userExists = await db.users.findOne({ where: { email } });
+        const userExists = await userRepository.findByEmail(email);
         if (userExists) throw new Error('Email already in use');
 
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password || 'Staff@123', salt);
 
-        return await db.users.create({
+        return await userRepository.create({
             ...employeeData,
             password: hashedPassword,
             status: 'active'
@@ -50,28 +49,27 @@ class EmployeeService {
     }
 
     async updateEmployee(id, updateData) {
-        const user = await db.users.findByPk(id);
-        if (!user) throw new Error('Employee not found');
-        
         // Remove password from updateData to prevent accidental overrides
         const { password, ...safeData } = updateData;
-        return await user.update(safeData);
+        const result = await userRepository.update(id, safeData);
+        if (!result) throw new Error('Employee not found');
+        return result;
     }
 
     async deleteEmployee(id) {
-        const user = await db.users.findByPk(id);
-        if (!user) throw new Error('Employee not found');
-        return await user.destroy(); // soft delete due to paranoid: true
+        const result = await userRepository.delete(id);
+        if (!result) throw new Error('Employee not found');
+        return true;
     }
 
     async updateEmployeeRole(id, role) {
-        const user = await db.users.findByPk(id);
-        if (!user) throw new Error('User not found');
-        return await user.update({ role });
+        const result = await userRepository.update(id, { role });
+        if (!result) throw new Error('User not found');
+        return result;
     }
 
     async toggleEmployeeStatus(id) {
-        const user = await db.users.findByPk(id);
+        const user = await userRepository.findById(id);
         if (!user) throw new Error('User not found');
         const newStatus = user.status === 'active' ? 'inactive' : 'active';
         return await user.update({ status: newStatus });

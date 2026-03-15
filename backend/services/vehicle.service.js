@@ -1,8 +1,11 @@
-const db = require('../models/index');
+const vehicleRepository = require('../repositories/VehicleRepository');
+const customerRepository = require('../repositories/CustomerRepository');
+const serviceOrderRepository = require('../repositories/ServiceOrderRepository');
+const { Op } = require('sequelize');
 
 class VehicleService {
     async registerVehicle(vehicleData) {
-        return await db.vehicles.create(vehicleData);
+        return await vehicleRepository.create(vehicleData);
     }
 
     async getAllVehicles(query) {
@@ -11,7 +14,6 @@ class VehicleService {
 
         const where = {};
         if (search) {
-            const { Op } = require('sequelize');
             where[Op.or] = [
                 { make: { [Op.like]: `%${search}%` } },
                 { model: { [Op.like]: `%${search}%` } },
@@ -19,9 +21,9 @@ class VehicleService {
             ];
         }
 
-        const { count, rows } = await db.vehicles.findAndCountAll({
+        const { count, rows } = await vehicleRepository.findAndCountAll({
             where,
-            include: [{ model: db.customers, as: 'customer', attributes: ['firstName', 'lastName'] }],
+            include: [{ model: customerRepository.model, as: 'customer', attributes: ['firstName', 'lastName'] }],
             limit: parseInt(limit),
             offset: parseInt(offset),
             order: [['createdAt', 'DESC']]
@@ -36,10 +38,10 @@ class VehicleService {
     }
 
     async getVehicleById(id) {
-        const vehicle = await db.vehicles.findByPk(id, {
+        const vehicle = await vehicleRepository.findById(id, {
             include: [
-                { model: db.customers, as: 'customer' },
-                { model: db.serviceOrders, as: 'serviceOrders' }
+                { model: customerRepository.model, as: 'customer' },
+                { model: serviceOrderRepository.model, as: 'serviceOrders' }
             ]
         });
         if (!vehicle) throw new Error('Vehicle not found');
@@ -47,15 +49,14 @@ class VehicleService {
     }
 
     async updateVehicle(id, updateData) {
-        const vehicle = await db.vehicles.findByPk(id);
-        if (!vehicle) throw new Error('Vehicle not found');
-        return await vehicle.update(updateData);
+        const result = await vehicleRepository.update(id, updateData);
+        if (!result) throw new Error('Vehicle not found');
+        return result;
     }
 
     async deleteVehicle(id) {
-        const vehicle = await db.vehicles.findByPk(id);
-        if (!vehicle) throw new Error('Vehicle not found');
-        await vehicle.destroy();
+        const result = await vehicleRepository.delete(id);
+        if (!result) throw new Error('Vehicle not found');
         return true;
     }
 }

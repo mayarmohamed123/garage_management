@@ -1,11 +1,18 @@
-const db = require('../models/index');
+const serviceOrderRepository = require('../repositories/ServiceOrderRepository');
+const vehicleRepository = require('../repositories/VehicleRepository');
+const customerRepository = require('../repositories/CustomerRepository');
+const userRepository = require('../repositories/UserRepository');
+const productRepository = require('../repositories/ProductRepository');
+const invoiceRepository = require('../repositories/InvoiceRepository');
+const servicePartRepository = require('../repositories/ServicePartRepository');
+const { Op } = require('sequelize');
 
 class ServiceOrderService {
     async createOrder(orderData) {
-        const orderCount = await db.serviceOrders.count();
+        const orderCount = await serviceOrderRepository.count();
         const orderNumber = `SO-${1000 + orderCount + 1}`;
         
-        return await db.serviceOrders.create({
+        return await serviceOrderRepository.create({
             ...orderData,
             orderNumber
         });
@@ -15,7 +22,6 @@ class ServiceOrderService {
         const { status, technicianId, vehicleId, page = 1, limit = 10, search = '' } = query;
         const offset = (page - 1) * limit;
 
-        const { Op } = require('sequelize');
         const where = {};
         if (status) where.status = status;
         if (technicianId) where.technicianId = technicianId;
@@ -28,12 +34,12 @@ class ServiceOrderService {
             ];
         }
 
-        const { count, rows } = await db.serviceOrders.findAndCountAll({
+        const { count, rows } = await serviceOrderRepository.findAndCountAll({
             where,
             include: [
-                { model: db.vehicles, as: 'vehicle', include: [{ model: db.customers, as: 'customer' }] },
-                { model: db.users, as: 'technician', attributes: ['firstName', 'lastName'] },
-                { model: db.products, as: 'products' }
+                { model: vehicleRepository.model, as: 'vehicle', include: [{ model: customerRepository.model, as: 'customer' }] },
+                { model: userRepository.model, as: 'technician', attributes: ['firstName', 'lastName'] },
+                { model: productRepository.model, as: 'products' }
             ],
             limit: parseInt(limit),
             offset: parseInt(offset),
@@ -49,12 +55,12 @@ class ServiceOrderService {
     }
 
     async getOrderById(id) {
-        const order = await db.serviceOrders.findByPk(id, {
+        const order = await serviceOrderRepository.findById(id, {
             include: [
-                { model: db.vehicles, as: 'vehicle', include: [{ model: db.customers, as: 'customer' }] },
-                { model: db.users, as: 'technician', attributes: ['firstName', 'lastName'] },
-                { model: db.products, as: 'products' },
-                { model: db.invoices, as: 'invoice' }
+                { model: vehicleRepository.model, as: 'vehicle', include: [{ model: customerRepository.model, as: 'customer' }] },
+                { model: userRepository.model, as: 'technician', attributes: ['firstName', 'lastName'] },
+                { model: productRepository.model, as: 'products' },
+                { model: invoiceRepository.model, as: 'invoice' }
             ]
         });
         if (!order) throw new Error('Order not found');
@@ -62,28 +68,28 @@ class ServiceOrderService {
     }
 
     async updateStatus(id, status) {
-        const order = await db.serviceOrders.findByPk(id);
-        if (!order) throw new Error('Order not found');
-        return await order.update({ status });
+        const result = await serviceOrderRepository.update(id, { status });
+        if (!result) throw new Error('Order not found');
+        return result;
     }
 
     async updateOrder(id, data) {
-        const order = await db.serviceOrders.findByPk(id);
-        if (!order) throw new Error('Order not found');
-        return await order.update(data);
+        const result = await serviceOrderRepository.update(id, data);
+        if (!result) throw new Error('Order not found');
+        return result;
     }
 
     async addPartToOrder(orderId, partData) {
         const { productId, quantity } = partData;
         
-        const order = await db.serviceOrders.findByPk(orderId);
-        const product = await db.products.findByPk(productId);
+        const order = await serviceOrderRepository.findById(orderId);
+        const product = await productRepository.findById(productId);
 
         if (!order || !product) throw new Error('Order or Product not found');
         if (product.stockQuantity < quantity) throw new Error('Insufficient stock');
 
         // Check if part already added
-        let servicePart = await db.serviceParts.findOne({
+        let servicePart = await servicePartRepository.findOne({
             where: { serviceOrderId: orderId, productId }
         });
 
@@ -91,7 +97,7 @@ class ServiceOrderService {
             servicePart.quantity += quantity;
             await servicePart.save();
         } else {
-            await db.serviceParts.create({
+            await servicePartRepository.create({
                 serviceOrderId: orderId,
                 productId,
                 quantity,

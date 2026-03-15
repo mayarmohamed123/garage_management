@@ -1,8 +1,10 @@
-const db = require('../models/index');
+const customerRepository = require('../repositories/CustomerRepository');
+const vehicleRepository = require('../repositories/VehicleRepository');
+const { Op } = require('sequelize');
 
 class CustomerService {
     async createCustomer(customerData) {
-        return await db.customers.create(customerData);
+        return await customerRepository.create(customerData);
     }
 
     async getAllCustomers(query) {
@@ -11,7 +13,6 @@ class CustomerService {
         
         const where = {};
         if (search) {
-            const { Op } = require('sequelize');
             where[Op.or] = [
                 { firstName: { [Op.like]: `%${search}%` } },
                 { lastName: { [Op.like]: `%${search}%` } },
@@ -19,7 +20,7 @@ class CustomerService {
             ];
         }
 
-        const { count, rows } = await db.customers.findAndCountAll({
+        const { count, rows } = await customerRepository.findAndCountAll({
             where,
             limit: parseInt(limit),
             offset: parseInt(offset),
@@ -35,23 +36,22 @@ class CustomerService {
     }
 
     async getCustomerById(id) {
-        const customer = await db.customers.findByPk(id, {
-            include: [{ model: db.vehicles, as: 'vehicles' }]
+        const customer = await customerRepository.findById(id, {
+            include: [{ model: vehicleRepository.model, as: 'vehicles' }]
         });
         if (!customer) throw new Error('Customer not found');
         return customer;
     }
 
     async updateCustomer(id, updateData) {
-        const customer = await db.customers.findByPk(id);
-        if (!customer) throw new Error('Customer not found');
-        return await customer.update(updateData);
+        const result = await customerRepository.update(id, updateData);
+        if (!result) throw new Error('Customer not found');
+        return result;
     }
 
     async deleteCustomer(id) {
-        const customer = await db.customers.findByPk(id);
-        if (!customer) throw new Error('Customer not found');
-        await customer.destroy(); // Soft delete
+        const result = await customerRepository.delete(id);
+        if (!result) throw new Error('Customer not found');
         return true;
     }
 }

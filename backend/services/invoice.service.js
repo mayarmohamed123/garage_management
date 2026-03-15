@@ -1,16 +1,22 @@
-const db = require('../models/index');
+const invoiceRepository = require('../repositories/InvoiceRepository');
+const serviceOrderRepository = require('../repositories/ServiceOrderRepository');
+const productRepository = require('../repositories/ProductRepository');
+const vehicleRepository = require('../repositories/VehicleRepository');
+const customerRepository = require('../repositories/CustomerRepository');
+const paymentRepository = require('../repositories/PaymentRepository');
+const { Op } = require('sequelize');
 
 class InvoiceService {
     async generateInvoice(serviceOrderId) {
-        const order = await db.serviceOrders.findByPk(serviceOrderId, {
-            include: [{ model: db.products, as: 'products' }]
+        const order = await serviceOrderRepository.findById(serviceOrderId, {
+            include: [{ model: productRepository.model, as: 'products' }]
         });
 
         if (!order) throw new Error('Order not found');
         if (order.status !== 'Completed') throw new Error('Cannot generate invoice for incomplete order');
 
         // Check if invoice already exists
-        let invoice = await db.invoices.findOne({ where: { serviceOrderId } });
+        let invoice = await invoiceRepository.findOne({ where: { serviceOrderId } });
         if (invoice) return invoice;
 
         // Calculate totals
@@ -18,7 +24,7 @@ class InvoiceService {
         const totalAmount = parseFloat(order.laborCost) + partsTotal;
         const invoiceNumber = `INV-${Date.now().toString().slice(-6)}`;
 
-        return await db.invoices.create({
+        return await invoiceRepository.create({
             invoiceNumber,
             serviceOrderId,
             totalAmount,
@@ -27,17 +33,21 @@ class InvoiceService {
     }
 
     async getInvoiceById(id) {
-        const invoice = await db.invoices.findByPk(id, {
+        const invoice = await invoiceRepository.findById(id, {
             include: [
                 { 
-                    model: db.serviceOrders, 
+                    model: serviceOrderRepository.model, 
                     as: 'serviceOrder',
                     include: [
-                        { model: db.vehicles, as: 'vehicle', include: [{ model: db.customers, as: 'customer' }] },
-                        { model: db.products, as: 'products' }
+                        { 
+                            model: vehicleRepository.model, 
+                            as: 'vehicle', 
+                            include: [{ model: customerRepository.model, as: 'customer' }] 
+                        },
+                        { model: productRepository.model, as: 'products' }
                     ]
                 },
-                { model: db.payments, as: 'payments' }
+                { model: paymentRepository.model, as: 'payments' }
             ]
         });
         if (!invoice) throw new Error('Invoice not found');
@@ -47,7 +57,6 @@ class InvoiceService {
     async getAllInvoices(query = {}) {
         const { search = '', page = 1, limit = 10 } = query;
         const offset = (page - 1) * limit;
-        const { Op } = require('sequelize');
 
         const where = {};
         if (search) {
@@ -56,17 +65,21 @@ class InvoiceService {
             ];
         }
 
-        const { count, rows } = await db.invoices.findAndCountAll({
+        const { count, rows } = await invoiceRepository.findAndCountAll({
             where,
             include: [
                 { 
-                    model: db.serviceOrders, 
+                    model: serviceOrderRepository.model, 
                     as: 'serviceOrder',
                     include: [
-                        { model: db.vehicles, as: 'vehicle', include: [{ model: db.customers, as: 'customer' }] }
+                        { 
+                            model: vehicleRepository.model, 
+                            as: 'vehicle', 
+                            include: [{ model: customerRepository.model, as: 'customer' }] 
+                        }
                     ]
                 },
-                { model: db.payments, as: 'payments' }
+                { model: paymentRepository.model, as: 'payments' }
             ],
             limit: parseInt(limit),
             offset: parseInt(offset),
@@ -82,9 +95,9 @@ class InvoiceService {
     }
 
     async updateInvoiceStatus(id, status) {
-        const invoice = await db.invoices.findByPk(id);
-        if (!invoice) throw new Error('Invoice not found');
-        return await invoice.update({ status });
+        const result = await invoiceRepository.update(id, { status });
+        if (!result) throw new Error('Invoice not found');
+        return result;
     }
 }
 

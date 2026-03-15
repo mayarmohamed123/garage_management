@@ -1,4 +1,4 @@
-const db = require('../models/index');
+const userRepository = require('../repositories/UserRepository');
 const bcrypt = require('bcryptjs');
 const generateToken = require('../utils/generateToken');
 
@@ -7,7 +7,7 @@ class AuthService {
         const { email, password } = userData;
         
         // Check if user exists
-        const userExists = await db.users.findOne({ where: { email } });
+        const userExists = await userRepository.findByEmail(email);
         if (userExists) {
             throw new Error('User already exists');
         }
@@ -17,7 +17,7 @@ class AuthService {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         // Create user
-        const user = await db.users.create({
+        const user = await userRepository.create({
             ...userData,
             password: hashedPassword
         });
@@ -35,7 +35,7 @@ class AuthService {
     }
 
     async login(email, password) {
-        const user = await db.users.findOne({ where: { email } });
+        const user = await userRepository.findByEmail(email);
         if (!user) {
             throw new Error('Invalid credentials');
         }

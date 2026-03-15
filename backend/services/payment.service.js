@@ -1,29 +1,29 @@
-const db = require('../models/index');
+const paymentRepository = require('../repositories/PaymentRepository');
+const invoiceRepository = require('../repositories/InvoiceRepository');
 
 class PaymentService {
     async recordPayment(invoiceId, paymentData) {
-        const invoice = await db.invoices.findByPk(invoiceId);
+        const invoice = await invoiceRepository.findById(invoiceId);
         if (!invoice) throw new Error('Invoice not found');
 
-        const payment = await db.payments.create({
+        const payment = await paymentRepository.create({
             ...paymentData,
             invoiceId
         });
 
         // Update invoice status
-        const totalPaid = await db.payments.sum('amount', { where: { invoiceId } });
+        const totalPaid = await paymentRepository.model.sum('amount', { where: { invoiceId } });
         if (totalPaid >= invoice.totalAmount) {
-            invoice.status = 'Paid';
+            await invoiceRepository.update(invoiceId, { status: 'Paid' });
         } else if (totalPaid > 0) {
-            invoice.status = 'Partially Paid';
+            await invoiceRepository.update(invoiceId, { status: 'Partially Paid' });
         }
-        await invoice.save();
 
         return payment;
     }
 
     async getInvoicePayments(invoiceId) {
-        return await db.payments.findAll({ where: { invoiceId } });
+        return await paymentRepository.findAll({ where: { invoiceId } });
     }
 }
 

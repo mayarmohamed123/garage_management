@@ -1,8 +1,9 @@
-const db = require('../models/index');
+const productRepository = require('../repositories/ProductRepository');
+const { Op } = require('sequelize');
 
 class ProductService {
     async createProduct(productData) {
-        return await db.products.create(productData);
+        return await productRepository.create(productData);
     }
 
     async getAllProducts(query) {
@@ -11,14 +12,13 @@ class ProductService {
 
         const where = {};
         if (search) {
-            const { Op } = require('sequelize');
             where[Op.or] = [
                 { name: { [Op.like]: `%${search}%` } },
                 { sku: { [Op.like]: `%${search}%` } }
             ];
         }
 
-        const { count, rows } = await db.products.findAndCountAll({
+        const { count, rows } = await productRepository.findAndCountAll({
             where,
             limit: parseInt(limit),
             offset: parseInt(offset),
@@ -34,21 +34,20 @@ class ProductService {
     }
 
     async getProductById(id) {
-        const product = await db.products.findByPk(id);
+        const product = await productRepository.findById(id);
         if (!product) throw new Error('Product not found');
         return product;
     }
 
     async updateProduct(id, updateData) {
-        const product = await db.products.findByPk(id);
-        if (!product) throw new Error('Product not found');
-        return await product.update(updateData);
+        const result = await productRepository.update(id, updateData);
+        if (!result) throw new Error('Product not found');
+        return result;
     }
 
     async deleteProduct(id) {
-        const product = await db.products.findByPk(id);
-        if (!product) throw new Error('Product not found');
-        await product.destroy();
+        const result = await productRepository.delete(id);
+        if (!result) throw new Error('Product not found');
         return true;
     }
 }
